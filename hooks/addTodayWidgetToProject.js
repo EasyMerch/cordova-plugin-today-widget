@@ -85,6 +85,7 @@ module.exports = function (context) {
 
   // Get the plugin variables from the parameters or the config file
   var WIDGET_NAME = getCordovaParameter("WIDGET_NAME", contents);
+  var WIDGET_ALIAS = getCordovaParameter("WIDGET_ALIAS", contents) || 'Widget';
   var WIDGET_BUNDLE_SUFFIX = getCordovaParameter("WIDGET_BUNDLE_SUFFIX", contents);
   var ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = getCordovaParameter("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", contents);
   var SWIFT_VERSION = getCordovaParameter("SWIFT_VERSION", contents);
@@ -239,14 +240,14 @@ module.exports = function (context) {
 
       // Create a separate PBXGroup for the widgets files, name has to be unique and path must be in quotation marks
       var pbxGroupKey = pbxProject.pbxCreateGroup(
-        'Widget',
+        WIDGET_ALIAS,
         '"' + widgetName + '"'
       );
       if (pbxGroupKey) {
         log(
           'Successfully created empty PbxGroup for folder: ' +
           widgetName +
-          ' with alias: Widget',
+          ' with alias: '+WIDGET_ALIAS,
           'info'
         );
       }
@@ -356,7 +357,7 @@ module.exports = function (context) {
           var buildSettingsObj = configurations[key].buildSettings;
           if (typeof buildSettingsObj['PRODUCT_NAME'] !== 'undefined') {
             var productName = buildSettingsObj['PRODUCT_NAME'];
-            if (productName.indexOf('Widget') >= 0) {
+            if (productName.indexOf(WIDGET_NAME) >= 0) {
               if (addXcconfig) {
                 configurations[key].baseConfigurationReference =
                   xcconfigReference + ' /* ' + xcconfigFileName + ' */';
