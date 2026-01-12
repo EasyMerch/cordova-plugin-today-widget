@@ -135,6 +135,18 @@ module.exports = function(context) {
       var widgetName = WIDGET_NAME || projectName + ' Widget';
       log('Your widget will be named: ' + widgetName, 'info');
 
+      var targets = pbxProject.pbxNativeTargetSection();
+      for (var target_id in targets) {
+        if (
+          targets[target_id].name === '"' + widgetName + '"' ||
+          targets[target_id].name === widgetName
+        ) {
+          log('Widget ' + widgetName + ' already exists, skipping', 'info');
+          deferral.resolve();
+          return;
+        }
+      }
+
       var widgetBundleId = WIDGET_BUNDLE_SUFFIX || 'widget';
       log(
         'Your widget bundle id will be: ' + bundleId + '.' + widgetBundleId,
@@ -287,10 +299,9 @@ module.exports = function(context) {
 
       // Add files which are not part of any build phase (config)
       configFiles.forEach(configFile => {
-        pbxProject.addFile(configFile, pbxGroupKey);
+        var file = pbxProject.addFile(configFile, pbxGroupKey);
         // We need the reference to add the xcconfig to the XCBuildConfiguration as baseConfigurationReference
         if (path.extname(configFile) == '.xcconfig') {
-          var file = pbxProject.hasFile(configFile);
           xcconfigReference = file.fileRef;
         }
       });
