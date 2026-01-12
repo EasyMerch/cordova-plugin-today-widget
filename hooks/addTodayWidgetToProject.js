@@ -1,5 +1,3 @@
-// @ts-check
-
 var elementTree = require('elementtree');
 var fs = require('fs');
 var path = require('path');
@@ -35,9 +33,11 @@ function log(logString, type) {
   console.log(prefix + logString + postfix);
 }
 
-function getPreferenceValue (config, name) {
-  var value = config.match(new RegExp('name="' + name + '" value="(.*?)"', "i"));
-  if(value && value[1]) {
+function getPreferenceValue(config, name) {
+  var value = config.match(
+    new RegExp('name="' + name + '" value="(.*?)"', 'i')
+  );
+  if (value && value[1]) {
     return value[1];
   } else {
     return null;
@@ -45,20 +45,20 @@ function getPreferenceValue (config, name) {
 }
 
 function replacePlaceholdersInPlist(plistPath, placeHolderValues) {
-    var plistContents = fs.readFileSync(plistPath, 'utf8');
-    for (var i = 0; i < placeHolderValues.length; i++) {
-        var placeHolderValue = placeHolderValues[i],
-            regexp = new RegExp(placeHolderValue.placeHolder, "g");
-        plistContents = plistContents.replace(regexp, placeHolderValue.value);
-    }
-    fs.writeFileSync(plistPath, plistContents);
+  var plistContents = fs.readFileSync(plistPath, 'utf8');
+  for (var i = 0; i < placeHolderValues.length; i++) {
+    var placeHolderValue = placeHolderValues[i],
+      regexp = new RegExp(placeHolderValue.placeHolder, 'g');
+    plistContents = plistContents.replace(regexp, placeHolderValue.value);
+  }
+  fs.writeFileSync(plistPath, plistContents);
 }
 
 function getCordovaParameter(variableName, contents) {
   var variable;
-  if(process.argv.join("|").indexOf(variableName + "=") > -1) {
-    var re = new RegExp(variableName + '=(.*?)(\||$))', 'g');
-    variable = process.argv.join("|").match(re)[1];
+  if (process.argv.join('|').indexOf(variableName + '=') > -1) {
+    var re = new RegExp(variableName + '=(.*?)(||$))', 'g');
+    variable = process.argv.join('|').match(re)[1];
   } else {
     variable = getPreferenceValue(contents, variableName);
   }
@@ -71,11 +71,12 @@ log(
   'start'
 );
 
-module.exports = function (context) {
+module.exports = function(context) {
   var deferral = new Q.defer();
 
   if (context.opts.cordova.platforms.indexOf('ios') < 0) {
     log('You have to add the ios platform before adding this plugin!', 'error');
+    return;
   }
 
   var contents = fs.readFileSync(
@@ -84,11 +85,17 @@ module.exports = function (context) {
   );
 
   // Get the plugin variables from the parameters or the config file
-  var WIDGET_NAME = getCordovaParameter("WIDGET_NAME", contents);
-  var WIDGET_ALIAS = getCordovaParameter("WIDGET_ALIAS", contents) || 'Widget';
-  var WIDGET_BUNDLE_SUFFIX = getCordovaParameter("WIDGET_BUNDLE_SUFFIX", contents);
-  var ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = getCordovaParameter("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", contents);
-  var SWIFT_VERSION = getCordovaParameter("SWIFT_VERSION", contents);
+  var WIDGET_NAME = getCordovaParameter('WIDGET_NAME', contents);
+  var WIDGET_ALIAS = getCordovaParameter('WIDGET_ALIAS', contents) || 'Widget';
+  var WIDGET_BUNDLE_SUFFIX = getCordovaParameter(
+    'WIDGET_BUNDLE_SUFFIX',
+    contents
+  );
+  var ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = getCordovaParameter(
+    'ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES',
+    contents
+  );
+  var SWIFT_VERSION = getCordovaParameter('SWIFT_VERSION', contents);
 
   if (contents) {
     contents = contents.substring(contents.indexOf('<'));
@@ -104,10 +111,10 @@ module.exports = function (context) {
     : path.join(context.opts.projectRoot, 'platforms/ios/');
   log('Folder containing your iOS project: ' + iosFolder, 'info');
 
-  fs.readdir(iosFolder, function (err, data) {
+  fs.readdir(iosFolder, function(err, data) {
     var projectFolder;
     var projectName;
-    var run = function () {
+    var run = function() {
       var pbxProject;
       var projectPath;
       projectPath = path.join(projectFolder, 'project.pbxproj');
@@ -129,7 +136,10 @@ module.exports = function (context) {
       log('Your widget will be named: ' + widgetName, 'info');
 
       var widgetBundleId = WIDGET_BUNDLE_SUFFIX || 'widget';
-      log('Your widget bundle id will be: ' + bundleId + '.' + widgetBundleId, 'info');
+      log(
+        'Your widget bundle id will be: ' + bundleId + '.' + widgetBundleId,
+        'info'
+      );
 
       var widgetFolder = path.join(iosFolder, widgetName);
       var sourceFiles = [];
@@ -143,29 +153,35 @@ module.exports = function (context) {
       var xcconfigReference;
       var addEntitlementsFile = false;
       var entitlementsFileName;
-      var projectPlistPath = path.join(iosFolder, projectName, projectName + '-Info.plist');
-      var projectPlistJson = plist.parse(fs.readFileSync(projectPlistPath, 'utf8'));
+      var projectPlistPath = path.join(
+        iosFolder,
+        projectName,
+        projectName + '-Info.plist'
+      );
+      var projectPlistJson = plist.parse(
+        fs.readFileSync(projectPlistPath, 'utf8')
+      );
       var placeHolderValues = [
         {
           placeHolder: '__DISPLAY_NAME__',
-          value: projectPlistJson['CFBundleDisplayName']
+          value: projectPlistJson['CFBundleDisplayName'],
         },
         {
           placeHolder: '__APP_IDENTIFIER__',
-          value: projectPlistJson['CFBundleIdentifier']
+          value: projectPlistJson['CFBundleIdentifier'],
         },
         {
           placeHolder: '__BUNDLE_SUFFIX__',
-          value: widgetBundleId
+          value: widgetBundleId,
         },
         {
           placeHolder: '__BUNDLE_SHORT_VERSION_STRING__',
-          value: projectPlistJson['CFBundleShortVersionString']
+          value: projectPlistJson['CFBundleShortVersionString'],
         },
         {
           placeHolder: '__BUNDLE_VERSION__',
-          value: projectPlistJson['CFBundleVersion']
-        }
+          value: projectPlistJson['CFBundleVersion'],
+        },
       ];
 
       fs.readdirSync(widgetFolder).forEach(file => {
@@ -191,14 +207,20 @@ module.exports = function (context) {
             case '.entitlements':
             case '.xcconfig':
               if (fileExtension === '.plist') {
-                replacePlaceholdersInPlist(path.join(widgetFolder, file), placeHolderValues);
+                replacePlaceholdersInPlist(
+                  path.join(widgetFolder, file),
+                  placeHolderValues
+                );
               }
               if (fileExtension === '.xcconfig') {
                 addXcconfig = true;
                 xcconfigFileName = file;
               }
               if (fileExtension === '.entitlements') {
-                replacePlaceholdersInPlist(path.join(widgetFolder, file), placeHolderValues);
+                replacePlaceholdersInPlist(
+                  path.join(widgetFolder, file),
+                  placeHolderValues
+                );
                 addEntitlementsFile = true;
                 entitlementsFileName = file;
               }
@@ -246,8 +268,9 @@ module.exports = function (context) {
       if (pbxGroupKey) {
         log(
           'Successfully created empty PbxGroup for folder: ' +
-          widgetName +
-          ' with alias: '+WIDGET_ALIAS,
+            widgetName +
+            ' with alias: ' +
+            WIDGET_ALIAS,
           'info'
         );
       }
@@ -264,9 +287,10 @@ module.exports = function (context) {
 
       // Add files which are not part of any build phase (config)
       configFiles.forEach(configFile => {
-        var file = pbxProject.addFile(configFile, pbxGroupKey);
+        pbxProject.addFile(configFile, pbxGroupKey);
         // We need the reference to add the xcconfig to the XCBuildConfiguration as baseConfigurationReference
         if (path.extname(configFile) == '.xcconfig') {
+          var file = pbxProject.hasFile(configFile);
           xcconfigReference = file.fileRef;
         }
       });
@@ -297,8 +321,8 @@ module.exports = function (context) {
 
       log(
         'Successfully added ' +
-        sourceFiles.length +
-        ' source files to PbxGroup and PBXSourcesBuildPhase!',
+          sourceFiles.length +
+          ' source files to PbxGroup and PBXSourcesBuildPhase!',
         'info'
       );
 
@@ -364,12 +388,17 @@ module.exports = function (context) {
                 log('Added xcconfig file reference to build settings!', 'info');
               }
               if (addEntitlementsFile) {
-                buildSettingsObj['CODE_SIGN_ENTITLEMENTS'] = '"' + widgetName + '/' + entitlementsFileName + '"';
-                log('Added entitlements file reference to build settings!', 'info');
+                buildSettingsObj['CODE_SIGN_ENTITLEMENTS'] =
+                  '"' + widgetName + '/' + entitlementsFileName + '"';
+                log(
+                  'Added entitlements file reference to build settings!',
+                  'info'
+                );
               }
               if (projectContainsSwiftFiles) {
                 buildSettingsObj['SWIFT_VERSION'] = SWIFT_VERSION || '3.0';
-                buildSettingsObj['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES || 'YES';
+                buildSettingsObj['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] =
+                  ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES || 'YES';
                 log('Added build settings for swift support!', 'info');
               }
               if (addBridgingHeader) {
@@ -379,7 +408,10 @@ module.exports = function (context) {
                   '/' +
                   bridgingHeaderName +
                   '"';
-                log('Added bridging header reference to build settings!', 'info');
+                log(
+                  'Added bridging header reference to build settings!',
+                  'info'
+                );
               }
             }
           }
@@ -404,7 +436,7 @@ module.exports = function (context) {
 
     // Find the project folder by looking for *.xcodeproj
     if (data && data.length) {
-      data.forEach(function (folder) {
+      data.forEach(function(folder) {
         if (folder.match(/\.xcodeproj$/)) {
           projectFolder = path.join(iosFolder, folder);
           projectName = path.basename(folder, '.xcodeproj');

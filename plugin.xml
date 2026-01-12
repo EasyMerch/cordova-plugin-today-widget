@@ -28,9 +28,8 @@
       </array>
     </config-file>
 
-    <hook type="after_plugin_install" src="hooks/prerequisites.js"/>
-    <hook type="after_plugin_install" src="hooks/copyExtensionFolderToIosProjectFolder.js"/>
-    <hook type="after_plugin_install" src="hooks/addTodayWidgetToProject.js"/>
+    <hook type="after_prepare" src="hooks/copyExtensionFolderToIosProjectFolder.js"/>
+    <hook type="after_prepare" src="hooks/addTodayWidgetToProject.js"/>
     <hook type="after_prepare" src="hooks/fixAppEntitlements.js"/>
   </platform>
 </plugin>

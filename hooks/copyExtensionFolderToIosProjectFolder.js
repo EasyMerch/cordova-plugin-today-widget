@@ -1,5 +1,3 @@
-// @ts-check
-
 var fs = require('fs');
 var path = require('path');
 var Q = require('q');
@@ -32,9 +30,11 @@ function log(logString, type) {
   console.log(prefix + logString + postfix);
 }
 
-function getPreferenceValue (config, name) {
-  var value = config.match(new RegExp('name="' + name + '" value="(.*?)"', "i"));
-  if(value && value[1]) {
+function getPreferenceValue(config, name) {
+  var value = config.match(
+    new RegExp('name="' + name + '" value="(.*?)"', 'i')
+  );
+  if (value && value[1]) {
     return value[1];
   } else {
     return null;
@@ -85,9 +85,9 @@ var copyFolderRecursiveSync = function(source, target) {
 
 function getCordovaParameter(variableName, contents) {
   var variable;
-  if(process.argv.join("|").indexOf(variableName + "=") > -1) {
-    var re = new RegExp(variableName + '=(.*?)(\||$))', 'g');
-    variable = process.argv.join("|").match(re)[1];
+  if (process.argv.join('|').indexOf(variableName + '=') > -1) {
+    var re = new RegExp(variableName + '=(.*?)(||$))', 'g');
+    variable = process.argv.join('|').match(re)[1];
   } else {
     variable = getPreferenceValue(contents, variableName);
   }
@@ -96,6 +96,11 @@ function getCordovaParameter(variableName, contents) {
 
 module.exports = function(context) {
   var deferral = new Q.defer();
+
+  if (context.opts.cordova.platforms.indexOf('ios') < 0) {
+    log('You have to add the ios platform before adding this plugin!', 'error');
+    return;
+  }
 
   var contents = fs.readFileSync(
     path.join(context.opts.projectRoot, 'config.xml'),
@@ -124,26 +129,25 @@ module.exports = function(context) {
     }
 
     // Get the widget name and location from the parameters or the config file
-    var WIDGET_NAME = getCordovaParameter("WIDGET_NAME", contents);
-    var WIDGET_PATH = getCordovaParameter("WIDGET_PATH", contents);
+    var WIDGET_NAME = getCordovaParameter('WIDGET_NAME', contents);
+    var WIDGET_PATH = getCordovaParameter('WIDGET_PATH', contents);
     var widgetName = WIDGET_NAME || projectName + ' Widget';
 
     if (WIDGET_PATH) {
-        srcFolder = path.join(
-          context.opts.projectRoot,
-          WIDGET_PATH,
-          widgetName + '/'
-        );
+      srcFolder = path.join(
+        context.opts.projectRoot,
+        WIDGET_PATH,
+        widgetName + '/'
+      );
     } else {
-        srcFolder = path.join(
-          context.opts.projectRoot,
-          'www',
-          widgetName + '/'
-        );
+      srcFolder = path.join(context.opts.projectRoot, 'www', widgetName + '/');
     }
     if (!fs.existsSync(srcFolder)) {
       log(
-        'Missing widget folder in ' + srcFolder + '. Should have the same name as your widget: ' + widgetName,
+        'Missing widget folder in ' +
+          srcFolder +
+          '. Should have the same name as your widget: ' +
+          widgetName,
         'error'
       );
     }
